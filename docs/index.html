@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>ダミー画像量工場</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<link href="https://fonts.googleapis.com/css?family=Noto+Sans+JP" rel="stylesheet">
+	<script type="text/javascript" src="./js/lib/zip.min.js"></script>
+	<script type="text/javascript" src="./js/main.js"></script>
+	<style>
+		.main {
+			width: 800px;
+			margin: auto;
+			/**font-family: 'Noto Sans JP', sans-serif;*/
+		}
+		.canvas-area {
+			text-align: center;
+		}
+		.canvas-area > canvas {
+			margin: auto;
+		}
+	</style>
+</head>
+
+<body onLoad="test()">
+	<div class="main">
+		<h1>ダミー画像工場</h1>
+		<div class="canvas-area">
+			<canvas id="sample" width="128" height="128"></canvas>
+		</div>
+
+		<form id="form" method="GET">
+			<div class="form-group">
+				<label>text</label>
+				<textarea class="form-control" id="text" name="text" rows="8"></textarea>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">bg</label>
+				<div class="col-sm-10">
+					<input class="form-control" id="bg" name="bg" type="color">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">fill_style</label>
+				<div class="col-sm-10">
+					<input class="form-control" id="fill_style" name="fill_style" type="color">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">width</label>
+				<div class="col-sm-10">
+					<input class="form-control" id="width" name="width" type="number">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">height</label>
+				<div class="col-sm-10">
+					<input class="form-control" id="height" name="height" type="number">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">font_family</label>
+				<div class="col-sm-10">
+					<input class="form-control" id="font_family" name="font_family" type="text">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">font_size</label>
+				<div class="col-sm-10">
+					<input class="form-control" id="font_size" name="font_size" type="number">
+				</div>
+			</div>
+			<div class="form-group form-check">
+				<input id="with_header" name="with_header" type="checkbox" class="form-check-input">
+				<label class="form-check-label" for="exampleCheck1">1行目を見出しにする</label>
+			</div>
+			<div class="form-group form-check">
+				<input id="with_size" name="with_size" type="checkbox" class="form-check-input">
+				<label class="form-check-label">解像度を追記する</label>
+			</div>
+
+			<button class="btn btn-primary" type="submit">画像更新</button>
+			<a class="btn btn-success" id="download">ダウンロード</a>
+		</form>
+
+		<footer>
+			<br>
+			<div>@osakana4242</div>
+		</footer>
+	</div>
+
+</body>
+
+</html>
