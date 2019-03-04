@@ -202,10 +202,12 @@ class Main {
 class Args {
 	constructor(args) {
 		const hasQuery = 0 < document.location.search.length;
-		this.text = args.text || 'ダミー\n' +
-			'画像1\timage_001\n' +
-			'画像2\timage_002\n' +
-			'画像3\timage_003\n';
+		this.text = args.text || '' +
+			'ダミー\n' +
+			'へぼい剣\tweapon_0001\n' +
+			'ただの剣\tweapon_0002\n' +
+			'すごい剣\tweapon_0003\n';
+
 		this.width = parseInt(args.width || 128);
 		this.height = parseInt(args.height || 128);
 		this.margin = parseInt(args.margin || 1);
