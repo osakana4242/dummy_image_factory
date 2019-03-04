@@ -33,35 +33,6 @@ class Main {
 		return document.getElementById('sample');
 	}
 
-	static draw(context, args, header, fileName) {
-		let text = fileName;
-		if (header !== '') {
-			text = `${header};` + text;
-		}
-		if (args.with_size) {
-			text += `;${args.width}x${args.height}`;
-		}
-
-		const lines = text.split(';');
-		const lineHeihgt = args.font_size * 1.5;
-		const textHeight = lineHeihgt * lines.length;
-
-		context.fillStyle = args.bg;
-		context.fillRect(0, 0, args.width, args.height);
-
-		context.fillStyle = args.fill_style;
-		context.textBaseline = 'top';
-		context.font = `${args.font_size}px ${args.font_family}`;
-
-		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i];
-			const metrics = context.measureText(line);
-			const textX = (args.width - metrics.width) / 2;
-			const textY = ((args.height - textHeight) / 2) + lineHeihgt * (i + 0.25);
-			context.fillText(line, textX, textY);
-		}
-	}
-
 	static update(args) {
 		const canvas = Main.getCanvas();
 		canvas.width = args.width;
@@ -74,19 +45,95 @@ class Main {
 
 		const header = args.with_header ? fileNames[0] : '';
 		const files = [];
-		for (let fi = args.with_header ? 1 : 0; fi < fileNames.length; fi++) {
-			const fileName = fileNames[fi];
-			if (fileName.trim() === '') continue;
-			Main.draw(context, args, header, fileName);
-			const image = Main.toArray(canvas);
-			const file = {
-				name: `${fileName}.png`,
-				body: image,
-			};
-			files.push(file);
+
+
+		const func = (fi) => {
+			for (; fi < fileNames.length; fi++) {
+				const line = fileNames[fi];
+				if (line.trim() === '') continue;
+				const rows = line.split('\t');
+				const title = rows[0];
+				const fileName = (rows.length <= 1) ? title : rows[1];
+
+				Main.draw(context, args, header, title);
+				const image = Main.toArray(canvas);
+				const file = {
+					name: `${fileName}.png`,
+					body: image,
+				};
+				files.push(file);
+				break;
+			}
+
+			if (fi < fileNames.length) {
+				setTimeout(func, 1000 / 60, fi + 1);
+				return;
+			}
+
+			Main.toZip(files);
+		};
+
+		let fi = args.with_header ? 1 : 0;
+		func(fi);
+	}
+
+	static draw(context, args, header, title) {
+		let text = title;
+		if (header !== '') {
+			text = `${header};` + text;
+		}
+		if (args.with_size) {
+			text += `;${args.width}x${args.height}`;
 		}
 
-		Main.toZip(files);
+		const lines = text.split(';');
+		const lineHeihgt = args.font_size * 1.5;
+		const textHeight = lineHeihgt * lines.length;
+
+		var rect = {
+			x: args.margin,
+			y: args.margin,
+			width: args.width - args.margin * 2,
+			height: args.height - args.margin * 2
+		};
+
+		context.fillStyle = args.bg_color;
+		context.fillRect(rect.x, rect.y, rect.width, rect.height);
+
+		context.fillStyle = args.border_color;
+		context.fillRect(rect.x, rect.y, rect.width, 1);
+		context.fillRect(rect.x, rect.y + rect.height - 1, rect.width, 1);
+		context.fillRect(rect.x, rect.y, 1, rect.height);
+		context.fillRect(rect.x + rect.width - 1, rect.y, 1, rect.height);
+
+		context.textBaseline = 'top';
+		context.font = `${args.font_size}px ${args.font_family}`;
+
+		context.strokeStyle = args.font_edge_color;
+		context.fillStyle = args.font_color;
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+			const metrics = context.measureText(line);
+			const textX = rect.x + (rect.width - metrics.width) / 2;
+			const textY = rect.y + ((rect.height - textHeight) / 2) + lineHeihgt * (i + 0.25);
+			Main.drawEdgeText(context, line, textX, textY);
+		}
+	}
+
+	static drawEdgeText(context, text, x, y) {
+		const fillStyle = context.fillStyle;
+		context.fillStyle = context.strokeStyle;
+		context.fillText(text, x - 1, y);
+		context.fillText(text, x + 1, y);
+		context.fillText(text, x, y - 1);
+		context.fillText(text, x, y - 0);
+		context.fillText(text, x - 1, y + 1);
+		context.fillText(text, x + 1, y + 1);
+		context.fillText(text, x + 1, y - 1);
+		context.fillText(text, x - 1, y - 1);
+
+		context.fillStyle = fillStyle;
+		context.fillText(text, x, y);
 	}
 
 	/** https://qiita.com/0829/items/a8c98c8f53b2e821ac94 */
@@ -118,7 +165,9 @@ class Main {
 			window.navigator.msSaveBlob(blob, 'sample.zip');
 			window.navigator.msSaveOrOpenBlob(blob, 'sample.zip');
 		} else {
-			document.getElementById('download').href = window.URL.createObjectURL(blob);
+			const elem = document.getElementById('download');
+			elem.href = window.URL.createObjectURL(blob);
+			elem.download = 'dummy_image.zip';
 		}
 	}
 
@@ -148,28 +197,23 @@ class Main {
 		}
 		return bytes;
 	}
-
-	static getJsonObj() {
-		return {
-			inputText1: $('#inputText1').val(),
-			inputRadio1: $('input[name=inputRadio1]:checked').val(),
-			select1: $('#select1').val()
-		}
-	}
 }
 
 class Args {
 	constructor(args) {
 		const hasQuery = 0 < document.location.search.length;
 		this.text = args.text || 'ダミー\n' +
-			'image_001\n' +
-			'image_002\n' +
-			'image_003\n';
-		this.bg = args.bg || '#ff00ff';
+			'画像1\timage_001\n' +
+			'画像2\timage_002\n' +
+			'画像3\timage_003\n';
 		this.width = parseInt(args.width || 128);
 		this.height = parseInt(args.height || 128);
+		this.margin = parseInt(args.margin || 1);
+		this.border_color = args.border_color || '#000000';
+		this.bg_color = args.bg_color || '#ff00ff';
 		this.font_size = parseInt(args.font_size || 12);
-		this.fill_style = args.fill_style || '#ffffff';
+		this.font_edge_color = args.font_edge_color || '#000000';
+		this.font_color = args.font_color || '#ffffff';
 		this.font_family = args.font_family || "'Noto Sans JP', sans-serif";
 		this.with_header = hasQuery ? (args.with_header !== undefined) : true;
 		this.with_size = hasQuery ? (args.with_size !== undefined) : true;
@@ -178,14 +222,21 @@ class Args {
 
 function test() {
 	const args = new Args(QueryString.parse(null, null, null, true));
-	document.getElementById('text').value = args.text;
-	document.getElementById('bg').value = args.bg;
-	document.getElementById('width').value = args.width;
-	document.getElementById('height').value = args.height;
-	document.getElementById('font_size').value = args.font_size;
-	document.getElementById('fill_style').value = args.fill_style;
-	document.getElementById('with_header').checked = args.with_header;
-	document.getElementById('with_size').checked = args.with_size;
-	document.getElementById('font_family').value = args.font_family;
+
+	for (const key in args) {
+		const value = args[key]
+		const elem = document.getElementById(key);
+		if (!elem) continue;
+		switch (elem.type) {
+			case 'checkbox':
+				elem.checked = value;
+				break;
+			default:
+				elem.value = value;
+				break;
+		}
+
+	}
+
 	Main.update(args);
 }

@@ -46,17 +46,13 @@
 				<label>text</label>
 				<textarea class="form-control" id="text" name="text" rows="8"></textarea>
 			</div>
-			<div class="form-group row">
-				<label class="col-sm-2 col-form-label">bg</label>
-				<div class="col-sm-10">
-					<input class="form-control" id="bg" name="bg" type="color">
-				</div>
+			<div class="form-group form-check">
+				<input id="with_header" name="with_header" type="checkbox" class="form-check-input">
+				<label class="form-check-label" for="exampleCheck1">1行目を見出しとして扱う</label>
 			</div>
-			<div class="form-group row">
-				<label class="col-sm-2 col-form-label">fill_style</label>
-				<div class="col-sm-10">
-					<input class="form-control" id="fill_style" name="fill_style" type="color">
-				</div>
+			<div class="form-group form-check">
+				<input id="with_size" name="with_size" type="checkbox" class="form-check-input">
+				<label class="form-check-label">解像度を追記する</label>
 			</div>
 			<div class="form-group row">
 				<label class="col-sm-2 col-form-label">width</label>
@@ -71,6 +67,36 @@
 				</div>
 			</div>
 			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">margin</label>
+				<div class="col-sm-10">
+					<input class="form-control" id="margin" name="margin" type="number">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">border_color</label>
+				<div class="col-sm-10">
+					<input class="form-control" id="border_color" name="border_color" type="color">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">bg_color</label>
+				<div class="col-sm-10">
+					<input class="form-control" id="bg_color" name="bg_color" type="color">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">font_edge_color</label>
+				<div class="col-sm-10">
+					<input class="form-control" id="font_edge_color" name="font_edge_color" type="color">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">font_color</label>
+				<div class="col-sm-10">
+					<input class="form-control" id="font_color" name="font_color" type="color">
+				</div>
+			</div>
+			<div class="form-group row">
 				<label class="col-sm-2 col-form-label">font_family</label>
 				<div class="col-sm-10">
 					<input class="form-control" id="font_family" name="font_family" type="text">
@@ -82,14 +108,6 @@
 					<input class="form-control" id="font_size" name="font_size" type="number">
 				</div>
 			</div>
-			<div class="form-group form-check">
-				<input id="with_header" name="with_header" type="checkbox" class="form-check-input">
-				<label class="form-check-label" for="exampleCheck1">1行目を見出しにする</label>
-			</div>
-			<div class="form-group form-check">
-				<input id="with_size" name="with_size" type="checkbox" class="form-check-input">
-				<label class="form-check-label">解像度を追記する</label>
-			</div>
 
 			<button class="btn btn-primary" type="submit">画像更新</button>
 			<a class="btn btn-success" id="download">ダウンロード</a>
@@ -97,7 +115,7 @@
 
 		<footer>
 			<br>
-			<div>@osakana4242</div>
+			<div><a href="https://github.com/osakana4242/dummy_image_factory">https://github.com/osakana4242/dummy_image_factory</a></div>
 		</footer>
 	</div>
 
