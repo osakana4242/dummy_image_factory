@@ -29,11 +29,158 @@ class QueryString {
 }
 
 class Main {
+	static init() {
+		const args = new Args(QueryString.parse(null, null, null, true));
+
+		for (const key in args) {
+			const value = args[key]
+			const elem = document.getElementById(key);
+			if (!elem) continue;
+			switch (elem.type) {
+				case 'checkbox':
+					elem.checked = value;
+					break;
+				case 'bg_image':
+					break;
+				default:
+					elem.value = value;
+					break;
+			}
+		}
+
+		const withBgImageElem = document.getElementById('with_bg_image');
+
+		const fileElem = document.getElementById('bg_image');
+		fileElem.addEventListener('change', (_evt) => {
+			withBgImageElem.checked = true;
+			Main.update1(null);
+		}, false);
+
+		const dragareaElem = document.getElementById('bg_image_dragarea');
+		dragareaElem.addEventListener('dragover', (_evt) => {
+			// console.log('dragover');
+			_evt.preventDefault();
+			dragareaElem.classList.add('dragover');
+		}, false);
+
+		dragareaElem.addEventListener('dragleave', (_evt) => {
+			// console.log('dragleave');
+			_evt.preventDefault();
+			dragareaElem.classList.remove('dragover');
+		}, false);
+
+		dragareaElem.addEventListener('drop', (_evt) => {
+			// console.log('drop');
+			_evt.preventDefault();
+			dragareaElem.classList.remove('dragover');
+			withBgImageElem.checked = true;
+			const file = _evt.dataTransfer.files[0];
+			fileElem.files = _evt.dataTransfer.files;
+			Main.update1(_evt.dataTransfer.files);
+		}, false);
+
+		const updateElem = document.getElementById('update');
+		updateElem.addEventListener('click', (_evt) => {
+			Main.update1(null);
+		}, false);
+
+		const copyElem = document.getElementById('url-copy');
+		copyElem.addEventListener('click', (_evt) => {
+			Main.copyToClipboard();
+		}, false);
+
+
+		Main.update2(args);
+	}
+
+
 	static getCanvas() {
 		return document.getElementById('sample');
 	}
 
-	static update(args) {
+
+	static async loadLocalImage(files) {
+		if (files.length <= 0) return null;
+		const file = files[0];
+		// 画像ファイル以外は処理を止める
+		if (!file.type.match('image.*')) {
+			alert('画像を選択してください');
+			return null;
+		}
+
+		const uploadImgSrc = await new Promise((resolve, reject) => {
+			// FileReaderオブジェクトを使ってファイル読み込み
+			var reader = new FileReader();
+			// ファイル読み込みに成功したときの処理
+			reader.onload = () => resolve(reader.result);
+			reader.onerror = (e) => reject(e);
+			// ファイル読み込みを実行
+			reader.readAsDataURL(file);
+		});
+
+		const img = await new Promise((resolve, reject) => {
+			const img = new Image();
+			img.src = uploadImgSrc;
+			img.onload = () => resolve(img);
+			img.onerror = (e) => reject(e);
+		});
+
+		return img;
+	}
+
+	static async loadFromForm(args, files) {
+		for (const key in args) {
+			const value = args[key]
+			const elem = document.getElementById(key);
+			if (!elem) continue;
+			switch (elem.type) {
+				case 'checkbox':
+					args[key] = elem.checked ? true : false;
+					break;
+				case 'file':
+					let result;
+					if (!files) {
+						files = elem.files;
+					}
+					result = await Main.loadLocalImage(files);
+					args[key] = result;
+					break;
+				case 'number':
+					args[key] = parseInt(elem.value);
+					break;
+				default:
+					args[key] = elem.value;
+					break;
+			}
+		}
+		return "ok loadFromForm";
+	}
+
+	static async update1(files) {
+		const args = new Args(QueryString.parse(null, null, null, true));
+		await Main.loadFromForm(args, files);
+		Main.update2(args);
+		window.scroll(0, 0);
+	}
+
+	static update2(args) {
+		{
+			const urlElement = document.getElementById('custom_url');
+			var a = location.href.replace('#' + location.hash, '').replace(location.search, '');
+			var b = '';
+			{
+				var c = {};
+				for (const key in args) {
+					const value = args[key];
+					if (key === 'bg_image') continue;
+					c[key] = value;
+				}
+				a += '?' + QueryString.stringify(c, null, null, true);
+			}
+
+
+			urlElement.value = a;
+		}
 		const canvas = Main.getCanvas();
 		canvas.width = args.width;
 		canvas.height = args.height;
@@ -52,8 +199,8 @@ class Main {
 				const line = fileNames[fi];
 				if (line.trim() === '') continue;
 				const rows = line.split('\t');
-				const title = rows[0];
-				const fileName = (rows.length <= 1) ? title : rows[1];
+				const fileName = rows[0];
+				const title = (rows.length <= 1) ? title : rows[1];
 
 				Main.draw(context, args, header, title);
 				const image = Main.toArray(canvas);
@@ -90,6 +237,13 @@ class Main {
 		const lineHeihgt = args.font_size * 1.5;
 		const textHeight = lineHeihgt * lines.length;
 
+		var canvasRect = {
+			x: 0,
+			y: 0,
+			width: args.width,
+			height: args.height,
+		};
+
 		var rect = {
 			x: args.margin,
 			y: args.margin,
@@ -97,43 +251,56 @@ class Main {
 			height: args.height - args.margin * 2
 		};
 
-		context.fillStyle = args.bg_color;
-		context.fillRect(rect.x, rect.y, rect.width, rect.height);
+		context.clearRect(canvasRect.x, canvasRect.y, canvasRect.width, canvasRect.height);
 
-		context.fillStyle = args.border_color;
-		context.fillRect(rect.x, rect.y, rect.width, 1);
-		context.fillRect(rect.x, rect.y + rect.height - 1, rect.width, 1);
-		context.fillRect(rect.x, rect.y, 1, rect.height);
-		context.fillRect(rect.x + rect.width - 1, rect.y, 1, rect.height);
+		if (args.with_bg_image && args.bg_image) {
+			context.drawImage(args.bg_image, rect.x, rect.y, rect.width, rect.height);
+		} else {
+			context.fillStyle = args.bg_color;
+			context.fillRect(rect.x, rect.y, rect.width, rect.height);
 
+			context.fillStyle = args.border_color;
+			context.fillRect(rect.x, rect.y, rect.width, 1);
+			context.fillRect(rect.x, rect.y + rect.height - 1, rect.width, 1);
+			context.fillRect(rect.x, rect.y, 1, rect.height);
+			context.fillRect(rect.x + rect.width - 1, rect.y, 1, rect.height);
+		}
+
+		const font_weight = args.font_bold ? 'bold' : 'normal';
 		context.textBaseline = 'top';
-		context.font = `${args.font_size}px ${args.font_family}`;
+		context.font = `${font_weight} ${args.font_size}px ${args.font_family}`;
 
 		context.strokeStyle = args.font_edge_color;
 		context.fillStyle = args.font_color;
+		const textMaxWidth = rect.width - Math.floor(args.font_size / 2);
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
 			const metrics = context.measureText(line);
-			const textX = rect.x + (rect.width - metrics.width) / 2;
+			const textWidth = Math.min(metrics.width, textMaxWidth);
+			const textX = rect.x + (rect.width - textWidth) / 2;
 			const textY = rect.y + ((rect.height - textHeight) / 2) + lineHeihgt * (i + 0.25);
-			Main.drawEdgeText(context, line, textX, textY);
+			if (args.font_edge) {
+				Main.drawEdgeText(context, line, textX, textY, textMaxWidth);
+			} else {
+				context.fillText(line, textX, textY, textMaxWidth);
+			}
 		}
 	}
 
-	static drawEdgeText(context, text, x, y) {
+	static drawEdgeText(context, text, x, y, maxWidth) {
 		const fillStyle = context.fillStyle;
 		context.fillStyle = context.strokeStyle;
-		context.fillText(text, x - 1, y);
-		context.fillText(text, x + 1, y);
-		context.fillText(text, x, y - 1);
-		context.fillText(text, x, y - 0);
-		context.fillText(text, x - 1, y + 1);
-		context.fillText(text, x + 1, y + 1);
-		context.fillText(text, x + 1, y - 1);
-		context.fillText(text, x - 1, y - 1);
+		context.fillText(text, x - 1, y, maxWidth);
+		context.fillText(text, x + 1, y, maxWidth);
+		context.fillText(text, x, y - 1, maxWidth);
+		context.fillText(text, x, y - 0, maxWidth);
+		context.fillText(text, x - 1, y + 1, maxWidth);
+		context.fillText(text, x + 1, y + 1, maxWidth);
+		context.fillText(text, x + 1, y - 1, maxWidth);
+		context.fillText(text, x - 1, y - 1, maxWidth);
 
 		context.fillStyle = fillStyle;
-		context.fillText(text, x, y);
+		context.fillText(text, x, y, maxWidth);
 	}
 
 	/** https://qiita.com/0829/items/a8c98c8f53b2e821ac94 */
@@ -161,14 +328,9 @@ class Main {
 
 		const blob = new Blob([compressData], { 'type': 'application/zip' });
 
-		if (window.navigator.msSaveBlob) {
-			window.navigator.msSaveBlob(blob, 'sample.zip');
-			window.navigator.msSaveOrOpenBlob(blob, 'sample.zip');
-		} else {
-			const elem = document.getElementById('download');
-			elem.href = window.URL.createObjectURL(blob);
-			elem.download = 'dummy_image.zip';
-		}
+		const elem = document.getElementById('download');
+		elem.href = window.URL.createObjectURL(blob);
+		elem.download = 'dummy_image.zip';
 	}
 
 	static strToUtf8Array(str) {
@@ -197,6 +359,16 @@ class Main {
 		}
 		return bytes;
 	}
+	static copyToClipboard() {
+		// コピー対象をJavaScript上で変数として定義する
+		var copyTarget = document.getElementById("custom_url");
+		// コピー対象のテキストを選択する
+		copyTarget.select();
+		// 選択しているテキストをクリップボードにコピーする
+		document.execCommand("Copy");
+		// コピーをお知らせする
+		// alert("コピーできました！ : " + copyTarget.value);
+	}
 }
 
 class Args {
@@ -204,41 +376,24 @@ class Args {
 		const hasQuery = 0 < document.location.search.length;
 		this.text = args.text || '' +
 			'ダミー\n' +
-			'へぼい剣\tweapon_0001\n' +
-			'ただの剣\tweapon_0002\n' +
-			'すごい剣\tweapon_0003\n';
+			'weapon_0001\tへぼい剣\n' +
+			'weapon_0002\tただの剣\n' +
+			'weapon_0003\tすごい剣\n';
 
 		this.width = parseInt(args.width || 128);
 		this.height = parseInt(args.height || 128);
-		this.margin = parseInt(args.margin || 1);
+		this.margin = parseInt(args.margin || 0);
 		this.border_color = args.border_color || '#000000';
 		this.bg_color = args.bg_color || '#ff00ff';
 		this.font_size = parseInt(args.font_size || 12);
+		this.font_bold = hasQuery ? (args.font_bold !== undefined) : true;
+		this.font_edge = hasQuery ? (args.font_edge !== undefined) : true;
 		this.font_edge_color = args.font_edge_color || '#000000';
 		this.font_color = args.font_color || '#ffffff';
 		this.font_family = args.font_family || "'Noto Sans JP', sans-serif";
 		this.with_header = hasQuery ? (args.with_header !== undefined) : true;
 		this.with_size = hasQuery ? (args.with_size !== undefined) : true;
+		this.with_bg_image = hasQuery ? (args.with_size !== undefined) : false;
+		this.bg_image = null;
 	}
-}
-
-function test() {
-	const args = new Args(QueryString.parse(null, null, null, true));
-
-	for (const key in args) {
-		const value = args[key]
-		const elem = document.getElementById(key);
-		if (!elem) continue;
-		switch (elem.type) {
-			case 'checkbox':
-				elem.checked = value;
-				break;
-			default:
-				elem.value = value;
-				break;
-		}
-
-	}
-
-	Main.update(args);
 }
