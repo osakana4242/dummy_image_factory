@@ -378,14 +378,16 @@ class Args {
 			'ダミー\n' +
 			'weapon_0001\tへぼい剣\n' +
 			'weapon_0002\tただの剣\n' +
-			'weapon_0003\tすごい剣\n';
+			'weapon_0003\tすごい剣\n' +
+			'weapon_0004\tものすごい剣\n' +
+			'weapon_0005\tとんでもない剣\n';
 
 		this.width = parseInt(args.width || 128);
 		this.height = parseInt(args.height || 128);
 		this.margin = parseInt(args.margin || 0);
 		this.border_color = args.border_color || '#000000';
 		this.bg_color = args.bg_color || '#ff00ff';
-		this.font_size = parseInt(args.font_size || 12);
+		this.font_size = parseInt(args.font_size || 16);
 		this.font_bold = hasQuery ? (args.font_bold !== undefined) : true;
 		this.font_edge = hasQuery ? (args.font_edge !== undefined) : true;
 		this.font_edge_color = args.font_edge_color || '#000000';
