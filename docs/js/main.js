@@ -200,7 +200,7 @@ class Main {
 				if (line.trim() === '') continue;
 				const rows = line.split('\t');
 				const fileName = rows[0];
-				const title = (rows.length <= 1) ? title : rows[1];
+				const title = (rows.length <= 1) ? fileName : rows[1];
 
 				Main.draw(context, args, header, title);
 				const image = Main.toArray(canvas);
