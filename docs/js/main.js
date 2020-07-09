@@ -270,6 +270,8 @@ class Main {
 		context.textBaseline = 'top';
 		context.font = `${font_weight} ${args.font_size}px ${args.font_family}`;
 
+		var verticalAlign = args.text_vertical_align;
+
 		context.strokeStyle = args.font_edge_color;
 		context.fillStyle = args.font_color;
 		const textMaxWidth = rect.width - Math.floor(args.font_size / 2);
@@ -278,7 +280,11 @@ class Main {
 			const metrics = context.measureText(line);
 			const textWidth = Math.min(metrics.width, textMaxWidth);
 			const textX = rect.x + (rect.width - textWidth) / 2;
-			const textY = rect.y + ((rect.height - textHeight) / 2) + lineHeihgt * (i + 0.25);
+			const textY = ( verticalAlign == "top" ) ?
+				rect.y + lineHeihgt * (i + 0.25) :
+				( verticalAlign == "bottom" ) ?
+					rect.y + (rect.height - textHeight) + lineHeihgt * (i + 0.25) :
+					rect.y + ((rect.height - textHeight) * 0.5) + lineHeihgt * (i + 0.25);
 			if (args.font_edge) {
 				Main.drawEdgeText(context, line, textX, textY, textMaxWidth);
 			} else {
@@ -385,6 +391,7 @@ class Args {
 		this.width = parseInt(args.width || 128);
 		this.height = parseInt(args.height || 128);
 		this.margin = parseInt(args.margin || 0);
+		this.text_vertical_align = args.vertical_align || 'bottom';
 		this.border_color = args.border_color || '#000000';
 		this.bg_color = args.bg_color || '#ff00ff';
 		this.font_size = parseInt(args.font_size || 16);
