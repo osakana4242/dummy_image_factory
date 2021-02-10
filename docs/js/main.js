@@ -395,14 +395,14 @@ class Args {
 		this.border_color = args.border_color || '#000000';
 		this.bg_color = args.bg_color || '#ff00ff';
 		this.font_size = parseInt(args.font_size || 16);
-		this.font_bold = hasQuery ? parseBoolean(args.font_bold) : true;
-		this.font_edge = hasQuery ? parseBoolean(args.font_edge) : true;
+		this.font_bold = hasQuery ? Args.parseBoolean(args.font_bold) : true;
+		this.font_edge = hasQuery ? Args.parseBoolean(args.font_edge) : true;
 		this.font_edge_color = args.font_edge_color || '#000000';
 		this.font_color = args.font_color || '#ffffff';
 		this.font_family = args.font_family || "'Noto Sans JP', sans-serif";
-		this.with_header = hasQuery ? parseBoolean(args.with_header) : true;
-		this.with_size = hasQuery ? parseBoolean(args.with_size) : true;
-		this.with_bg_image = hasQuery ? parseBoolean(args.with_bg_image) : false;
+		this.with_header = hasQuery ? Args.parseBoolean(args.with_header) : true;
+		this.with_size = hasQuery ? Args.parseBoolean(args.with_size) : true;
+		this.with_bg_image = hasQuery ? Args.parseBoolean(args.with_bg_image) : false;
 		this.bg_image = null;
 	}
 
