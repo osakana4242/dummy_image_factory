@@ -391,7 +391,7 @@ class Args {
 		this.width = parseInt(args.width || 128);
 		this.height = parseInt(args.height || 128);
 		this.margin = parseInt(args.margin || 0);
-		this.text_vertical_align = args.vertical_align || 'bottom';
+		this.text_vertical_align = args.text_vertical_align || 'bottom';
 		this.border_color = args.border_color || '#000000';
 		this.bg_color = args.bg_color || '#ff00ff';
 		this.font_size = parseInt(args.font_size || 16);
