@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="テキストから複数のダミー画像を作成し、一括出力するWEBツール">
+
+	<meta name="twitter:card" content="summary">
+	<meta property="og:url" content="https://osakana4242.github.io/dummy_image_factory/">
+	<meta property="og:title" content="ダミー画像工場">
+	<meta property="og:description" content="テキストから複数のダミー画像を一括出力できるWEBツール">
+	<meta property="og:image" content="https://osakana4242.github.io/dummy_image_factory/img/og_image.png">
+
+	<title>ダミー画像工場</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+	<link href="https://fonts.googleapis.com/css?family=Noto+Sans+JP" rel="stylesheet">
+	<script type="text/javascript" src="./js/lib/zip.min.js"></script>
+	<script type="text/javascript" src="./js/main.js?v=202107312154"></script>
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-11051536-8"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag() { dataLayer.push(arguments); }
+		gtag('js', new Date());
+		gtag('config', 'UA-11051536-8');
+	</script>
+	<style>
+		body {
+			background-color: #f0f0f0;
+		}
+
+		.main {
+			max-width: 800px;
+			width: auto;
+			margin: auto;
+			/**font-family: 'Noto Sans JP', sans-serif;*/
+		}
+
+		.canvas-area {
+			text-align: center;
+		}
+
+		.canvas-area>canvas {
+			margin: auto;
+			background-repeat: repeat;
+			background-image: url("./img/canvas_bg.png");
+		}
+
+		.dragarea {
+			border-style: dotted;
+			padding: 4px;
+			border-color: #c0c0c0;
+		}
+
+		.dragover {
+			background-color: #00ff00;
+		}
+
+		.shot {
+			border-style: solid;
+			border-color: #ccccff;
+			padding: 4px;
+			border-radius: 8px;
+		}
+
+	</style>
+</head>
+
+<body>
+	<script>
+		window.addEventListener('load', Main.init);
+	</script>
+	<div id="top" class="main">
+		<h1>
+			<i class="fas fa-industry"></i>
+			ダミー画像工場
+			<i class="fas fa-industry"></i>
+			<i class="fas fa-industry"></i>
+			<i class="fas fa-industry"></i>
+		</h1>
+
+		<div class="canvas-area">
+			<canvas id="sample" width="128" height="128"></canvas>
+		</div>
+
+		<form id="form" method="GET">
+			<div class="form-group">
+				<label>text (<a href="#help1">※1</a>)</label>
+				<textarea class="form-control" id="text" name="text" rows="8"></textarea>
+			</div>
+			<div class="form-group form-check">
+				<input id="with_header" name="with_header" type="checkbox" class="form-check-input">
+				<label class="form-check-label" for="exampleCheck1">1行目を見出しとして扱う</label>
+			</div>
+			<div class="form-group form-check">
+				<input id="with_size" name="with_size" type="checkbox" class="form-check-input">
+				<label class="form-check-label">解像度を追記する</label>
+			</div>
+			<div class="form-group form-check">
+				<input id="with_bg_image" name="with_bg_image" type="checkbox" class="form-check-input">
+				<label class="form-check-label">bg_image を使用する</label>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label" for="bg_image">bg_image (<a href="#help2">※2</a>)</label>
+				<div class="col-sm-8 dragarea" id="bg_image_dragarea">
+					ここにファイルをドロップ<br>
+					または<br>
+					<input class="form-control-file" id="bg_image" name="bg_image" type="file" accept="image/*">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label">width</label>
+				<div class="col-sm-8">
+					<input class="form-control" id="width" name="width" type="number">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label">height</label>
+				<div class="col-sm-8">
+					<input class="form-control" id="height" name="height" type="number">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label">margin</label>
+				<div class="col-sm-8">
+					<input class="form-control" id="margin" name="margin" type="number">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label">text_vertical_align</label>
+				<div class="col-sm-8">
+					<select id="text_vertical_align" class="form-control">
+						<option>top</option>
+						<option>middle</option>
+						<option selected>bottom</option>
+					</select>
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label">border_color</label>
+				<div class="col-sm-8">
+					<input class="form-control" id="border_color" name="border_color" type="color">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label">bg_color</label>
+				<div class="col-sm-8">
+					<input class="form-control" id="bg_color" name="bg_color" type="color">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label">font_edge_color</label>
+				<div class="col-sm-8">
+					<input class="form-control" id="font_edge_color" name="font_edge_color" type="color">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label">font_color</label>
+				<div class="col-sm-8">
+					<input class="form-control" id="font_color" name="font_color" type="color">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label">font_family</label>
+				<div class="col-sm-8">
+					<input class="form-control" id="font_family" name="font_family" type="text">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label">font_size</label>
+				<div class="col-sm-8">
+					<input class="form-control" id="font_size" name="font_size" type="number">
+				</div>
+			</div>
+			<div class="form-group form-check">
+				<input id="font_bold" name="font_bold" type="checkbox" class="form-check-input">
+				<label class="form-check-label">font_bold</label>
+			</div>
+			<div class="form-group form-check">
+				<input id="font_edge" name="font_edge" type="checkbox" class="form-check-input">
+				<label class="form-check-label">font_edge</label>
+			</div>
+
+			<div>
+				<a class="btn btn-primary" href="./index.html"><i class="fas fa-poo"></i> リセット</a>
+				<button type="button" class="btn btn-primary" id="update"><i class="fas fa-edit"></i> 設定を反映</button>
+				<a class="btn btn-success" id="download"><i class="fas fa-download"></i> ダウンロード</a>
+			</div>
+		</form>
+		<br>
+
+		<form>
+			<div class="form-group row">
+				<label for="url" class="col-sm-4 col-form-label">カスタムURL (<a href="#help2">※3</a>)</label>
+				<div class="col-sm-6">
+					<input class="form-control" type="text" id="custom_url" readonly>
+				</div>
+				<button type="button" class="col-sm-2 btn btn-primary" id="url-copy">コピー</button>
+			</div>
+		</form>
+
+		<div>
+			<a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false"
+				data-size="large"
+				data-text="ダミー画像工場 - テキストから複数のダミー画像を一括出力できるWEBツール"
+				data-url="https://osakana4242.github.io/dummy_image_factory/">
+				Tweet
+			</a>
+			<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+		</div>
+		<br>
+
+		<div>
+			<h2>※ 補足</h2>
+			<div id="help1">
+				※1. text - タブ区切りでファイル名、ラベルを列挙した分だけ画像を生成します。ラベル列は省略できます。
+			</div>
+			<div id="help2">
+				※2. bg_image - bg_image を使用する場合 border_color, bg_color の設定は無効になります。
+			</div>
+			<div id="help3">
+				※3. カスタムURL - 誰かに設定を共有したい時に使います。bg_image 以外の設定を保持したURLです。
+			</div>
+		</div>
+		<br>
+
+		<div id="pr">
+			<h2><i class="fas fa-smile"></i> テキストから複数のダミー画像を一括出力できます</h2>
+			<div>
+				<img class="shot" src="./img/example_07.jpg" width="400"><br>
+				↑ これを...<br>
+				<br>
+				<img class="shot" src="./img/example_01.jpg" width="400"><br>
+				↑ こういうテキストを書くだけで作れます<br>
+			</div>
+		</div>
+		<br>
+
+		<div id="usage">
+			<h2><i class="fas fa-question"></i> 使い方</h2>
+			<div>
+				<img class="shot" src="./img/example_01.jpg" width="400"><br>
+				1. エクセル、Google スプレッドシートなどの表計算ソフトで表を作成して、コピーする<br>
+				<br>
+				<img class="shot" src="./img/example_02.jpg" width="300">
+				<img class="shot" src="./img/example_03.jpg" width="300"><br>
+				2. text に貼り付けする<br>
+				<br>
+				<img class="shot" src="./img/example_04.jpg"><br>
+				3. 「設定を反映」をクリックする<br>
+				<br>
+				<img class="shot" src="./img/example_05.jpg" width="300"><br>
+				4. 設定内容が画像に反映されたことを確認する<br>
+				<br>
+				<img class="shot" src="./img/example_06.jpg"><br>
+				5. 「ダウンロード」をクリックする<br>
+				<br>
+				<img class="shot" src="./img/example_07.jpg"><br>
+				6. ダウンロードした zip ファイルを解凍して、おしまい<br>
+				<br>
+			</div>
+		</div>
+
+		<div>
+			<a class="btn btn-light" href="#">▲ このページの上部へ</a>
+		</div>
+
+		<footer>
+			<br>
+			<div>
+				<i class="fas fa-fish"></i>
+				<a href="https://github.com/osakana4242/dummy_image_factory">https://github.com/osakana4242/dummy_image_factory</a>
+			</div>
+		</footer>
+	</div>
+
+</body>
+
+</html>
